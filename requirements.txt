@@ -1,0 +1,9 @@
+torch
+torchvision
+torchaudio
+opencv-python
+pandas
+requests
+gitpython
+redis
+pillow
