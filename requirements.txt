@@ -7,3 +7,4 @@ requests
 gitpython
 redis
 pillow
+ultralytics
