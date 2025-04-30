@@ -8,18 +8,30 @@ from ultralytics import YOLO
 import numpy as np
 import cv2
 import warnings
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
-# Redis configuration
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT"))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+
 IMAGE_QUEUE = "image_queue"
 EVENT_QUEUE = "event_queue"
 
 # Connect to Redis
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
-
+redis_client = redis.Redis(
+  host=REDIS_HOST,
+  port=REDIS_PORT,
+  password= REDIS_PASSWORD,
+  decode_responses=False,
+  ssl=True
+)
 # Load YOLOv8 model with custom weights
 model = YOLO('police_model.pt')
 

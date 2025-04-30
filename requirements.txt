@@ -1,10 +1,11 @@
 torch
 torchvision
 torchaudio
-opencv-python
+opencv-python-headless
 pandas
 requests
 gitpython
 redis
 pillow
 ultralytics
+python-dotenv
