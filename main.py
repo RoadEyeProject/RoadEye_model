@@ -49,8 +49,8 @@ def detect_police_car(image_pil):
     #annotated_image_bgr = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
 
     # Display the image in a window called "Live Detection"
-    cv2.imshow("Live Detection", annotated_frame)
-    cv2.waitKey(1)  # Display each frame for a brief moment
+    #cv2.imshow("Live Detection", annotated_frame)
+    #cv2.waitKey(1)  # Display each frame for a brief moment
 
     # Debugging outputs
     boxes = results[0].boxes
