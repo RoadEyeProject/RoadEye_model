@@ -28,9 +28,7 @@ EVENT_QUEUE = "event_queue"
 redis_client = redis.Redis(
   host=REDIS_HOST,
   port=REDIS_PORT,
-  password= REDIS_PASSWORD,
   decode_responses=False,
-  ssl=True
 )
 # Load YOLOv8 model with custom weights
 model = YOLO('police_model.pt')
