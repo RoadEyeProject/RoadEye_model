@@ -1,16 +1,14 @@
-import torch
 import redis
 import json
 import base64
 from io import BytesIO
 from PIL import Image
 from ultralytics import YOLO
-import numpy as np
 import cv2
 import warnings
 from dotenv import load_dotenv
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 
 load_dotenv()
@@ -238,8 +236,6 @@ def detect_events(image_pil, confidence_threshold=0.3):
         cls_idx = int(box.cls)
         cls_name = model.names[cls_idx]
         display_name = CLASS_DISPLAY_NAMES.get(cls_name, cls_name)
-        
-        print(f"Detection #{i+1}: {display_name} (confidence: {conf:.2f})")
 
         if conf >= confidence_threshold:
             # Get bounding box coordinates
