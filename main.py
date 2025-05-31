@@ -19,7 +19,7 @@ def process_images():
                 continue
 
             message = json.loads(raw)
-            user_id = message["id"]
+            user_id = message["userId"]
             image_b64 = message["image"]
             location = message.get("location", {})
             timestamp = message.get("timestamp", datetime.utcnow().isoformat())
