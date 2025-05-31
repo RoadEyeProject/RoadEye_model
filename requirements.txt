@@ -1,7 +1,5 @@
-opencv-python-headless
-requests
-gitpython
-redis
-pillow
 ultralytics
+Pillow
+opencv-python-headless
+redis
 python-dotenv
