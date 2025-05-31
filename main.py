@@ -5,6 +5,7 @@ from model_loader import load_model
 from image_utils import decode_base64_image
 from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown
 from detection import detect_events
+from db import increment_user_event
 
 load_dotenv()
 model = load_model()
@@ -48,6 +49,7 @@ def process_images():
 
                 push_event(json.dumps(event))
                 set_cooldown(user_id, event_type)
+                increment_user_event(user_id, det["display_name"])
                 print(f"✅ Event pushed: {event_type} by {user_id}")
 
         except Exception as e:

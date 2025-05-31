@@ -3,3 +3,4 @@ Pillow
 opencv-python-headless
 redis
 python-dotenv
+pymongo[srv]
