@@ -10,6 +10,13 @@ from db import increment_user_event
 load_dotenv()
 model = load_model()
 
+EVENT_KEYS = {
+    "police_car": "Police Car",
+    "accident": "Accident",
+    "Arrow Board": "Road Construction",
+    "cones": "Road Construction"
+}
+
 def process_images():
     print("📡 Listening for incoming images...")
 
@@ -36,10 +43,11 @@ def process_images():
                 if is_on_cooldown(user_id, event_type):
                     print(f"⏱️ Cooldown active for {user_id} - {event_type}, skipping...")
                     continue
-
+                
+                updated_name_event_type = EVENT_KEYS.get(event_type)
                 event = {
                     "userId": user_id,
-                    "eventType": event_type,
+                    "eventType": updated_name_event_type,
                     "location": location,
                     "timestamp": timestamp,
                     "confidence": round(det["confidence"], 2),
@@ -49,8 +57,8 @@ def process_images():
 
                 push_event(json.dumps(event))
                 set_cooldown(user_id, event_type)
-                increment_user_event(user_id, det["display_name"])
-                print(f"✅ Event pushed: {event_type} by {user_id}")
+                increment_user_event(user_id, det["displayName"])
+                print(f"✅ Event pushed to redis: {updated_name_event_type} by {user_id}")
 
         except Exception as e:
             print(f"❌ Error: {e}")
