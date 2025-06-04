@@ -5,14 +5,19 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = int(os.getenv("REDIS_PORT"))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 COOLDOWN_MINUTES = int(os.getenv("COOLDOWN_MINUTES", 1))
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def is_on_cooldown(user_id, event_type):
+    if ENVIRONMENT == 'dev':
+        return False
     key = f"cooldown:{user_id}:{event_type}"
     return client.exists(key)
 
 def set_cooldown(user_id, event_type):
+    if ENVIRONMENT == 'dev':
+        return
     key = f"cooldown:{user_id}:{event_type}"
     client.setex(key, COOLDOWN_MINUTES * 60, "1")
 

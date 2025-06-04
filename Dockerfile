@@ -13,9 +13,6 @@ RUN apt-get update && apt-get install -y \
 # Set working directory in container
 WORKDIR /app
 
-# Create directory for detected images
-RUN mkdir -p /app/detected_images
-
 # Copy and install dependencies separately to leverage Docker layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
