@@ -22,3 +22,6 @@ def push_event(event):
 def pop_image():
     data = client.blpop("image_queue", timeout=5)
     return data[1] if data else None
+
+def publish_event(event):
+    client.publish("detected_events", event)

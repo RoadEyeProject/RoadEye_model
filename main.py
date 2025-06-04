@@ -3,7 +3,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from model_loader import load_model
 from image_utils import decode_base64_image
-from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown
+from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown, publish_event
 from detection import detect_events
 from db import increment_user_event
 
@@ -56,6 +56,12 @@ def process_images():
                 }
 
                 push_event(json.dumps(event))
+                publish_event(json.dumps({
+                    "userId": user_id,
+                    "event": updated_name_event_type,
+                    "timestamp": timestamp,
+                    "cooldown": 3 * 60
+                }))
                 set_cooldown(user_id, event_type)
                 increment_user_event(user_id, det["displayName"])
                 print(f"✅ Event pushed to redis: {updated_name_event_type} by {user_id}")
