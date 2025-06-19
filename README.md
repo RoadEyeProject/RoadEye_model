@@ -1,4 +1,4 @@
-# 🚓 RoadEye - Real-Time Object Detection for Road Safety
+# RoadEye - Real-Time Object Detection for Road Safety
 
 RoadEye is an AI-based object detection system built with YOLOv8 to identify critical road elements such as police vehicles, traffic cones, road signs, and accident zones – designed to automate Waze-style road alerts using smart camera input.
 
