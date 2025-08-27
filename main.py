@@ -64,7 +64,7 @@ def process_images():
                 }))
                 set_cooldown(user_id, event_type)
                 increment_user_event(user_id, det["displayName"])
-                print(f"✅ Event pushed to redis: {updated_name_event_type} by {user_id}")
+                print(f"✅ Event pushed to redis: {updated_name_event_type} by {user_id}\n")
 
         except Exception as e:
             print(f"❌ Error: {e}")
