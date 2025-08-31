@@ -9,7 +9,7 @@ CLASS_DISPLAY_NAMES = {
     "Accident": "Accident"
 }
 
-def detect_events(model, image, conf_thresh=0.3):
+def detect_events(model, image, conf_thresh=0.7):
     results = model(image, conf=conf_thresh)
     detections = []
 
