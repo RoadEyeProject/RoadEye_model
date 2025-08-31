@@ -76,7 +76,14 @@ def process_images(model):
             img_bgr = to_bgr_ndarray(image)
             ih, iw = img_bgr.shape[:2]
 
-            detections = detect_events(model, image)
+            detections = detect_events(
+                model,
+                image,
+                conf_thresh=0.7,
+                device=DEVICE,
+                half=USE_HALF,
+                imgsz=640
+                )
             show_detections(image, detections)
             for det in detections:
                 event_type = det.get("class")
@@ -128,5 +135,5 @@ def process_images(model):
 
 if __name__ == "__main__":
     _env_summary()
-    model = load_model()
+    model, DEVICE, USE_HALF = load_model()
     process_images(model)
