@@ -22,7 +22,8 @@ from image_utils import decode_base64_image
 from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown, publish_event
 from detection import detect_events
 from db import increment_user_event
-from show_detections import show_detections, to_bgr_ndarray, normalize_bbox
+from show_detections import to_bgr_ndarray, normalize_bbox
+from realtime_view import AsyncViewer
 
 
 EVENT_KEYS = {
@@ -84,7 +85,7 @@ def process_images(model):
                 half=USE_HALF,
                 imgsz=640
                 )
-            show_detections(image, detections)
+            viewer.show(image, detections)
             for det in detections:
                 event_type = det.get("class")
                 if not event_type:
@@ -126,6 +127,7 @@ def process_images(model):
 
         except KeyboardInterrupt:
             print("\n🛑 Stopped by user.")
+            viewer.stop()
             break
         except Exception as e:
             # Keep the loop alive; log and continue
@@ -136,4 +138,6 @@ def process_images(model):
 if __name__ == "__main__":
     _env_summary()
     model, DEVICE, USE_HALF = load_model()
+    viewer = AsyncViewer(window_name="RoadEye Detections", target_fps=20.0, draw_scale=0.9)
+    viewer.start()
     process_images(model)
