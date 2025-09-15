@@ -19,12 +19,13 @@ os.environ.setdefault("YOLO_CONFIG_DIR", os.environ["ULTRALYTICS_SETTINGS_DIR"])
 # ---- Imports that depend on env being loaded ----
 from model_loader import load_model
 from image_utils import decode_base64_image
-from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown, publish_event
-from detection import detect_events
 from db import increment_user_event
-from show_detections import to_bgr_ndarray, normalize_bbox
-from realtime_view import AsyncViewer
+from detection import detect_events
+from show_detections import to_bgr_ndarray, normalize_bbox, render_detections_data_url
+from redis_utils import pop_image, push_event, is_on_cooldown, set_cooldown, publish_event, publish_viz_frame
 
+VIZ_FPS = 8.0  # ~8 fps is smooth in browsers
+_last_viz_ts = 0.0
 
 EVENT_KEYS = {
     "police_car": "Police Car",
@@ -45,6 +46,7 @@ def _env_summary():
 
 
 def process_images(model):
+    global _last_viz_ts
     print("📡 Listening for incoming images...")
     while True:
         try:
@@ -53,50 +55,49 @@ def process_images(model):
                 time.sleep(IDLE_SLEEP_SEC)
                 continue
 
-            # raw may be bytes from Redis; ensure str
             if isinstance(raw, (bytes, bytearray)):
                 raw = raw.decode("utf-8", errors="ignore")
-
             message = json.loads(raw)
 
             user_id = message.get("userId")
             image_b64 = message.get("image")
             if not user_id or not image_b64:
-                # Malformed message; skip
-                # (Optional: log message once every N)
                 continue
 
             location = message.get("location", {})
             timestamp = message.get("timestamp") or datetime.utcnow().isoformat()
-
             image = decode_base64_image(image_b64)
             if image is None:
                 continue
-            
-            
+
             img_bgr = to_bgr_ndarray(image)
             ih, iw = img_bgr.shape[:2]
 
             detections = detect_events(
-                model,
-                image,
-                conf_thresh=0.7,
-                device=DEVICE,
-                half=USE_HALF,
-                imgsz=640
-                )
-            viewer.show(image, detections)
+                model, image, conf_thresh=0.7, device=DEVICE, half=USE_HALF, imgsz=640
+            )
+
+            # --- NEW: publish annotated frame at VIZ_FPS ---
+            now = time.time()
+            if now - _last_viz_ts >= (1.0 / VIZ_FPS):
+                data_url = render_detections_data_url(image, detections, max_width=1024, quality=80)
+                if data_url:
+                    publish_viz_frame(json.dumps({
+                        "type": "viz_frame",
+                        "ts": int(now * 1000),
+                        "image": data_url
+                    }))
+                _last_viz_ts = now
+            # ---------------------------------------------
+
             for det in detections:
                 event_type = det.get("class")
                 if not event_type:
                     continue
-
-                # Cooldown by (user_id, event_class)
                 if is_on_cooldown(user_id, event_type):
                     print(f"⏱️ Cooldown active for {user_id} - {event_type}, skipping...")
                     continue
 
-                # Map to display name for the websocket/UI
                 updated_name_event_type = EVENT_KEYS.get(event_type, event_type)
                 x, y, w, h = normalize_bbox(det["bbox"], iw, ih)
                 event = {
@@ -109,28 +110,21 @@ def process_images(model):
                     "bbox": [x, y, w, h],
                 }
 
-                # Push to your Redis queues/channels
                 push_event(json.dumps(event))
-                publish_event(
-                    json.dumps(
-                        {
-                            "userId": user_id,
-                            "event": updated_name_event_type,
-                            "timestamp": timestamp,
-                            "cooldown": 3 * 60,  # seconds
-                        }
-                    )
-                )
+                publish_event(json.dumps({
+                    "userId": user_id,
+                    "event": updated_name_event_type,
+                    "timestamp": timestamp,
+                    "cooldown": 3 * 60,
+                }))
                 set_cooldown(user_id, event_type)
                 increment_user_event(user_id, event["displayName"])
                 print(f"✅ Event pushed: {updated_name_event_type} by {user_id}")
 
         except KeyboardInterrupt:
             print("\n🛑 Stopped by user.")
-            viewer.stop()
             break
         except Exception as e:
-            # Keep the loop alive; log and continue
             print(f"❌ Error: {e}")
             time.sleep(0.25)
 
@@ -138,6 +132,4 @@ def process_images(model):
 if __name__ == "__main__":
     _env_summary()
     model, DEVICE, USE_HALF = load_model()
-    viewer = AsyncViewer(window_name="RoadEye Detections", target_fps=20.0, draw_scale=0.9)
-    viewer.start()
     process_images(model)

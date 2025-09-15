@@ -109,3 +109,36 @@ def show_detections(image, detections, window_name="Detections"):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.imshow(window_name, vis)
     cv2.waitKey(1)
+
+def render_detections_data_url(image, detections, max_width=960, quality=80):
+    """
+    Draw bboxes on a copy of `image`, optionally resize to max_width,
+    and return a 'data:image/jpeg;base64,...' URL string.
+    """
+    import base64
+    from io import BytesIO
+
+    vis = to_bgr_ndarray(image).copy()
+    ih, iw = vis.shape[:2]
+
+    for det in detections:
+        x, y, w, h = normalize_bbox(det["bbox"], iw, ih)
+        label = det.get("displayName", det.get("class", "obj"))
+        conf  = float(det.get("confidence", 0.0))
+        cv2.rectangle(vis, (x, y), (x+w, y+h), (0,255,0), 2)
+        cv2.putText(vis, f"{label} {conf:.2f}", (x, max(y-10, 20)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
+
+    # Optional downscale for bandwidth
+    if iw > max_width:
+        scale = max_width / float(iw)
+        vis = cv2.resize(vis, (int(iw*scale), int(ih*scale)), interpolation=cv2.INTER_AREA)
+
+    # Encode JPEG
+    encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)]
+    ok, buf = cv2.imencode('.jpg', vis, encode_params)
+    if not ok:
+        return None
+
+    b64 = base64.b64encode(buf.tobytes()).decode('ascii')
+    return f"data:image/jpeg;base64,{b64}"

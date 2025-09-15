@@ -30,3 +30,7 @@ def pop_image():
 
 def publish_event(event):
     client.publish("detected_events", event)
+
+def publish_viz_frame(message_json_str):
+    # message_json_str should be a compact JSON string
+    client.publish("viz_frames", message_json_str)
